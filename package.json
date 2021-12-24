@@ -11,8 +11,8 @@
   "dependencies": {
     "benchmark": "^2.1.4",
     "microtime": "^3.0.0",
-    "node-datachannel": "^0.1.4",
-    "werift": "^0.9.11",
-    "wrtc": "^0.4.7"
+    "node-datachannel": "0.1.14",
+    "werift": "0.14.3",
+    "wrtc": "0.4.7"
   }
 }
