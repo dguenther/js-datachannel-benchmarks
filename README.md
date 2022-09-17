@@ -10,22 +10,22 @@ Benchmarks and example code for WebRTC data channel libraries for Node.js. Feel 
 
 ### Test environment
 
-* Node.js v16.13.0
-* Windows Build 22000.376
+* Node.js v16.17.0
+* Windows Build 22000.856
 * AMD Ryzen 7 2700x
 
 ### ICE
 
 | Library | Results |
 | ------- | ------- |
-| node-webrtc | 20.31 ops/sec ±0.84% (50 runs sampled) |
-| node-datachannel | 0.96 ops/sec ±2.65% (9 runs sampled) |
-| werift | 3.18 ops/sec ±3.78% (20 runs sampled) |
+| node-webrtc | 21.64 ops/sec ±11.06% (50 runs sampled) |
+| node-datachannel | 1.26 ops/sec ±48.49% (6 runs sampled) |
+| werift | 0.88 ops/sec ±4.59% (9 runs sampled) |
 
 ### Messages
 
 | Library | Results |
 | ------- | ------- |
-| node-webrtc | 617 ops/sec ±0.54% (84 runs sampled) |
-| node-datachannel | 2,324 ops/sec ±0.98% (82 runs sampled) |
-| werift | 231 ops/sec ±11.58% (69 runs sampled) |
+| node-webrtc | 220 ops/sec ±0.47% (79 runs sampled) |
+| node-datachannel | 1,472 ops/sec ±0.96% (81 runs sampled) |
+| werift | 174 ops/sec ±10.20% (69 runs sampled) |
