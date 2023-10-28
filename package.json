@@ -1,6 +1,7 @@
 {
   "name": "js-datachannel-benchmarks",
   "version": "1.0.0",
+  "type": "module",
   "description": "Benchmarks and example code for WebRTC DataChannel libraries for Node.js",
   "scripts": {
     "ice": "node src/ice.js",
@@ -9,10 +10,12 @@
   "author": "Derek Guenther <dguenther9@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@koush/wrtc": "0.5.3",
+    "@roamhq/wrtc": "0.7.1",
     "benchmark": "^2.1.4",
     "microtime": "^3.0.0",
-    "node-datachannel": "0.3.6",
-    "werift": "0.15.11",
+    "node-datachannel": "0.5.0",
+    "werift": "0.18.8",
     "wrtc": "0.4.7"
   }
 }

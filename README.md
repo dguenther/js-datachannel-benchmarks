@@ -2,6 +2,8 @@
 
 Benchmarks and example code for WebRTC data channel libraries for Node.js. Feel free to open an issue or submit a PR if you know of other Node.js WebRTC libraries. PRs are also welcome if you find improvements to the benchmark cases.
 
+* [@koush/node-webrtc](https://github.com/koush/node-webrtc)
+* [@WonderInventions/node-webrtc](https://github.com/WonderInventions/node-webrtc)
 * [node-webrtc](https://github.com/node-webrtc/node-webrtc)
 * [node-datachannel](https://github.com/murat-dogan/node-datachannel)
 * [werift](https://github.com/shinyoshiaki/werift-webrtc)
@@ -10,22 +12,26 @@ Benchmarks and example code for WebRTC data channel libraries for Node.js. Feel 
 
 ### Test environment
 
-* Node.js v16.17.0
-* Windows Build 22000.856
+* Node.js v18.18.2
+* Windows Build 22621.2428
 * AMD Ryzen 7 2700x
 
 ### ICE
 
 | Library | Results |
 | ------- | ------- |
-| node-webrtc | 21.64 ops/sec ±11.06% (50 runs sampled) |
-| node-datachannel | 1.26 ops/sec ±48.49% (6 runs sampled) |
-| werift | 0.88 ops/sec ±4.59% (9 runs sampled) |
+| @koush/wrtc (@koush/node-webrtc) | 29.75 ops/sec ±2.08% (61 runs sampled) |
+| @roamhq/wrtc (@WonderInventions/node-webrtc) | 30.81 ops/sec ±2.56% (54 runs sampled) |
+| wrtc (node-webrtc) | 18.02 ops/sec ±12.93% (44 runs sampled) |
+| node-datachannel | 0.98 ops/sec ±1.17% (9 runs sampled) |
+| werift | 1.26 ops/sec ±4.72% (11 runs sampled) |
 
 ### Messages
 
 | Library | Results |
 | ------- | ------- |
-| node-webrtc | 220 ops/sec ±0.47% (79 runs sampled) |
-| node-datachannel | 1,472 ops/sec ±0.96% (81 runs sampled) |
-| werift | 174 ops/sec ±10.20% (69 runs sampled) |
+| @koush/wrtc (@koush/node-webrtc) | 186 ops/sec ±0.44% (82 runs sampled) |
+| @roamhq/wrtc (@WonderInventions/node-webrtc) | 186 ops/sec ±0.41% (84 runs sampled) |
+| wrtc (node-webrtc) | 184 ops/sec ±0.35% (82 runs sampled) |
+| node-datachannel | 1,320 ops/sec ±1.94% (80 runs sampled) |
+| werift | 149 ops/sec ±4.33% (69 runs sampled) |

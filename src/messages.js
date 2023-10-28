@@ -3,26 +3,40 @@
  * a message back.
  */
 
-const EventEmitter = require('events')
-const { randomBytes } = require('crypto')
+import EventEmitter from 'events'
+import { randomBytes } from 'crypto'
 
-const Benchmark = require('benchmark')
-const nodeDataChannel = require('node-datachannel')
-const Werift = require('werift')
-const wrtc = require('wrtc')
+import Benchmark from 'benchmark'
+import koushWrtc from '@koush/wrtc'
+import nodeDataChannel from 'node-datachannel'
+import roamhqWrtc from '@roamhq/wrtc'
+import Werift from 'werift'
+import wrtc from 'wrtc'
 
 console.log('Setting up...')
 
 var suite = new Benchmark.Suite
 
 var testData = {
-  nodeDataChannel: {
+  koushNodeWebrtc: {
+    peer1: null,
+    peer2: null,
+    dc1: null,
+    dc2: null,
+  },
+  roamhqNodeWebrtc: {
     peer1: null,
     peer2: null,
     dc1: null,
     dc2: null,
   },
   nodeWebRtc: {
+    peer1: null,
+    peer2: null,
+    dc1: null,
+    dc2: null,
+  },
+  nodeDataChannel: {
     peer1: null,
     peer2: null,
     dc1: null,
@@ -35,6 +49,74 @@ var testData = {
     dc2: null,
   },
 }
+
+const koushNodeWebRtcSetup = new Promise((resolve) => {
+  testData.koushNodeWebrtc.peer1 = new koushWrtc.RTCPeerConnection()
+  testData.koushNodeWebrtc.peer2 = new koushWrtc.RTCPeerConnection()
+  testData.koushNodeWebrtc.dc1 = testData.koushNodeWebrtc.peer1.createDataChannel('test')
+  
+  const { peer1, peer2, dc1 } = testData.koushNodeWebrtc
+  
+  dc1.onopen = () => {
+    resolve()
+  }
+  
+  peer1.onicecandidate = e => {
+    if (e.candidate && peer1.signalingState !== 'closed') {
+      peer2.addIceCandidate(e.candidate)
+    }
+  }
+  peer2.onicecandidate = e => {
+    if (e.candidate && peer2.signalingState !== 'closed') {
+      peer1.addIceCandidate(e.candidate)
+    }
+  }
+  peer2.ondatachannel = e => {
+    testData.koushNodeWebrtc.dc2 = e.channel
+    resolve()
+  }
+  
+  peer1.createOffer()
+    .then(offer => peer1.setLocalDescription(offer))
+    .then(() => peer2.setRemoteDescription(peer1.localDescription))
+    .then(() => peer2.createAnswer())
+    .then(answer => peer2.setLocalDescription(answer))
+    .then(() => peer1.setRemoteDescription(peer2.localDescription))
+})
+
+const roamHqNodeWebRtcSetup = new Promise((resolve) => {
+  testData.roamhqNodeWebrtc.peer1 = new roamhqWrtc.RTCPeerConnection()
+  testData.roamhqNodeWebrtc.peer2 = new roamhqWrtc.RTCPeerConnection()
+  testData.roamhqNodeWebrtc.dc1 = testData.roamhqNodeWebrtc.peer1.createDataChannel('test')
+  
+  const { peer1, peer2, dc1 } = testData.roamhqNodeWebrtc
+  
+  dc1.onopen = () => {
+    resolve()
+  }
+  
+  peer1.onicecandidate = e => {
+    if (e.candidate && peer1.signalingState !== 'closed') {
+      peer2.addIceCandidate(e.candidate)
+    }
+  }
+  peer2.onicecandidate = e => {
+    if (e.candidate && peer2.signalingState !== 'closed') {
+      peer1.addIceCandidate(e.candidate)
+    }
+  }
+  peer2.ondatachannel = e => {
+    testData.roamhqNodeWebrtc.dc2 = e.channel
+    resolve()
+  }
+  
+  peer1.createOffer()
+    .then(offer => peer1.setLocalDescription(offer))
+    .then(() => peer2.setRemoteDescription(peer1.localDescription))
+    .then(() => peer2.createAnswer())
+    .then(answer => peer2.setLocalDescription(answer))
+    .then(() => peer1.setRemoteDescription(peer2.localDescription))
+})
 
 const nodeWebRtcSetup = new Promise((resolve) => {
   testData.nodeWebRtc.peer1 = new wrtc.RTCPeerConnection()
@@ -71,8 +153,8 @@ const nodeWebRtcSetup = new Promise((resolve) => {
 })
 
 const nodeDataChannelSetup = new Promise((resolve) => {
-  testData.nodeDataChannel.peer1 = new nodeDataChannel.PeerConnection("Peer1", { iceServers: ["stun:stun.l.google.com:19302"] })
-  testData.nodeDataChannel.peer2 = new nodeDataChannel.PeerConnection("Peer2", { iceServers: ["stun:stun.l.google.com:19302"] })
+  testData.nodeDataChannel.peer1 = new nodeDataChannel.PeerConnection('Peer1', { iceServers: ['stun:stun.l.google.com:19302'] })
+  testData.nodeDataChannel.peer2 = new nodeDataChannel.PeerConnection('Peer2', { iceServers: ['stun:stun.l.google.com:19302'] })
   testData.nodeDataChannel.events = new EventEmitter()
   
   const { peer1, peer2 } = testData.nodeDataChannel
@@ -148,13 +230,57 @@ const weriftSetup = new Promise((resolve) => {
 })
 
 async function runTests() {
-  await Promise.all([nodeWebRtcSetup, nodeDataChannelSetup, weriftSetup])
+  await Promise.all([koushNodeWebRtcSetup, roamHqNodeWebRtcSetup, nodeWebRtcSetup, nodeDataChannelSetup, weriftSetup])
   console.log('Setup complete. Running benchmarks...')
   
   const message = randomBytes(5000)
   
   suite
-    .add('node-webrtc', {
+    .add('@koush/wrtc (@koush/node-webrtc)', {
+      defer: true,
+      fn: function(deferred) {   
+        const { dc1, dc2 } = testData.koushNodeWebrtc
+        
+        const dc2Message = ({ data }) => {
+          dc2.send(data)
+        }
+        
+        const dc1Message = () => {
+          dc2.removeEventListener('message', dc2Message)
+          dc1.removeEventListener('message', dc1Message)
+          deferred.resolve()
+        }
+        
+        dc2.addEventListener('message', dc2Message)
+        
+        dc1.addEventListener('message', dc1Message)
+        
+        dc1.send(message)
+      },
+    })
+    .add('@roamhq/wrtc (@roamhq/node-webrtc)', {
+      defer: true,
+      fn: function(deferred) {   
+        const { dc1, dc2 } = testData.roamhqNodeWebrtc
+        
+        const dc2Message = ({ data }) => {
+          dc2.send(data)
+        }
+        
+        const dc1Message = () => {
+          dc2.removeEventListener('message', dc2Message)
+          dc1.removeEventListener('message', dc1Message)
+          deferred.resolve()
+        }
+        
+        dc2.addEventListener('message', dc2Message)
+        
+        dc1.addEventListener('message', dc1Message)
+        
+        dc1.send(message)
+      },
+    })
+    .add('wrtc (node-webrtc)', {
       defer: true,
       fn: function(deferred) {   
         const { dc1, dc2 } = testData.nodeWebRtc

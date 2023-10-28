@@ -3,15 +3,89 @@
  * and open a DataChannel.
  */
 
-const Benchmark = require('benchmark')
-const nodeDataChannel = require('node-datachannel')
-const Werift = require('werift')
-const wrtc = require('wrtc')
+import Benchmark from 'benchmark'
+import koushWrtc from '@koush/wrtc'
+import nodeDataChannel from 'node-datachannel'
+import roamhqWrtc from '@roamhq/wrtc'
+import Werift from 'werift'
+import wrtc from 'wrtc'
 
 console.log('Setup complete. Running benchmarks...')
 
 new Benchmark.Suite()
-  .add('node-webrtc', {
+  .add('@koush/wrtc (@koush/node-webrtc)', {
+    defer: true,
+    fn: function(deferred) {
+      let peer1 = new koushWrtc.RTCPeerConnection()
+      let peer2 = new koushWrtc.RTCPeerConnection()
+      let dc = peer1.createDataChannel('test')
+      
+      dc.onopen = () => {
+        deferred.resolve()
+        dc.close()
+        peer1.close()
+        peer2.close()
+        dc = null
+        peer1 = null
+        peer2 = null
+      }
+      
+      peer1.onicecandidate = e => {
+        if (e.candidate && peer1.signalingState !== 'closed') {
+          peer2.addIceCandidate(e.candidate)
+        }
+      }
+      peer2.onicecandidate = e => {
+        if (e.candidate && peer2.signalingState !== 'closed') {
+          peer1.addIceCandidate(e.candidate)
+        }
+      }
+      
+      peer1.createOffer()
+        .then(offer => peer1.setLocalDescription(offer))
+        .then(() => peer2.setRemoteDescription(peer1.localDescription))
+        .then(() => peer2.createAnswer())
+        .then(answer => peer2.setLocalDescription(answer))
+        .then(() => peer1.setRemoteDescription(peer2.localDescription))
+    },
+  })
+  .add('@roamhq/wrtc (@WonderInventions/node-webrtc)', {
+    defer: true,
+    fn: function(deferred) {
+      let peer1 = new roamhqWrtc.RTCPeerConnection()
+      let peer2 = new roamhqWrtc.RTCPeerConnection()
+      let dc = peer1.createDataChannel('test')
+      
+      dc.onopen = () => {
+        deferred.resolve()
+        dc.close()
+        peer1.close()
+        peer2.close()
+        dc = null
+        peer1 = null
+        peer2 = null
+      }
+      
+      peer1.onicecandidate = e => {
+        if (e.candidate && peer1.signalingState !== 'closed') {
+          peer2.addIceCandidate(e.candidate)
+        }
+      }
+      peer2.onicecandidate = e => {
+        if (e.candidate && peer2.signalingState !== 'closed') {
+          peer1.addIceCandidate(e.candidate)
+        }
+      }
+      
+      peer1.createOffer()
+        .then(offer => peer1.setLocalDescription(offer))
+        .then(() => peer2.setRemoteDescription(peer1.localDescription))
+        .then(() => peer2.createAnswer())
+        .then(answer => peer2.setLocalDescription(answer))
+        .then(() => peer1.setRemoteDescription(peer2.localDescription))
+    },
+  })
+  .add('wrtc (node-webrtc)', {
     defer: true,
     fn: function(deferred) {
       let peer1 = new wrtc.RTCPeerConnection()
@@ -50,10 +124,9 @@ new Benchmark.Suite()
   .add('node-datachannel', {
     defer: true,
     fn: function(deferred) {
-      let peer1 = new nodeDataChannel.PeerConnection("Peer1", { iceServers: ["stun:stun.l.google.com:19302"] })
-      let peer2 = new nodeDataChannel.PeerConnection("Peer2", { iceServers: ["stun:stun.l.google.com:19302"] })
+      let peer1 = new nodeDataChannel.PeerConnection('Peer1', { iceServers: ['stun:stun.l.google.com:19302'] })
+      let peer2 = new nodeDataChannel.PeerConnection('Peer2', { iceServers: ['stun:stun.l.google.com:19302'] })
       
-      // Set Callbacks
       peer1.onLocalDescription((sdp, type) => {
         peer2.setRemoteDescription(sdp, type)
       })
@@ -61,7 +134,6 @@ new Benchmark.Suite()
         peer2.addRemoteCandidate(candidate, mid)
       })
       
-      // Set Callbacks
       peer2.onLocalDescription((sdp, type) => {
         peer1.setRemoteDescription(sdp, type)
       })
